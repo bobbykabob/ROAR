@@ -31,7 +31,8 @@ class OccupancyMapAgent(Agent):
         super(OccupancyMapAgent, self).run_step(sensors_data, vehicle)
         if self.front_depth_camera.data is not None and self.front_rgb_camera.data is not None:
             depth_img = self.front_depth_camera.data.copy()
-            pcd = self.depth_to_pcd.run_in_series(depth_image=depth_img)
+            rgb_img = self.front_rgb_camera.data.copy()
+            pcd = self.depth_to_pcd.run_in_series(depth_image=depth_img,rgb_image=rgb_img)
             self.non_blocking_pcd_visualization(pcd=pcd, should_center=True,
                                                 should_show_axis=True, axis_size=1)
         return self.vehicle.control

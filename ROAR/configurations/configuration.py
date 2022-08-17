@@ -9,7 +9,7 @@ class Configuration(BaseModel):
     # ROAR sensors settings
     name: str = Field(default="hero", title="Name of the agent", description="Duplicate from Carla Setting. "
                                                                              "But good to have")
-    lidar_config: LidarConfigModel = Field(default=LidarConfigModel()),
+    lidar_config: LidarConfigModel = Field(default=LidarConfigModel())
     front_depth_cam: Camera = Field(default=Camera(fov=70,
                                                    transform=Transform(
                                                        location=Location(x=1.6,
@@ -49,7 +49,7 @@ class Configuration(BaseModel):
                                  title="Rear RGB Camera")
     # data path
     waypoint_file_path: str = Field(default=(Path(
-        os.getcwd()) / "data" / "easy_map_waypoints.txt").as_posix())
+        os.getcwd()) / "data" / "major_map_waypoints.txt").as_posix())
 
     json_waypoint_file_path: str = Field(default=(Path(
         os.getcwd()) / "data" / "easy_map_waypoints.json").as_posix())
