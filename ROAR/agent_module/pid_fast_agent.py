@@ -34,7 +34,7 @@ class PIDFastAgent(Agent):
     def run_step(self, vehicle: Vehicle,
                  sensors_data: SensorsData) -> VehicleControl:
         super(PIDFastAgent, self).run_step(vehicle=vehicle,
-                                       sensors_data=sensors_data)
+                                           sensors_data=sensors_data)
         self.transform_history.append(self.vehicle.transform)
         # print(self.vehicle.transform, self.vehicle.velocity)
         if self.is_done:

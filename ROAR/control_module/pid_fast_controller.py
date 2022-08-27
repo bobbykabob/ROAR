@@ -14,6 +14,7 @@ from typing import Tuple
 import json
 from pathlib import Path
 
+
 class PIDFastController(Controller):
     def __init__(self, agent, steering_boundary: Tuple[float, float],
                  throttle_boundary: Tuple[float, float], **kwargs):
@@ -36,11 +37,13 @@ class PIDFastController(Controller):
         )
         self.logger = logging.getLogger(__name__)
 
-    def run_in_series(self, next_waypoint: Transform, close_waypoint: Transform, far_waypoint: Transform, **kwargs) -> VehicleControl:
+    def run_in_series(self, next_waypoint: Transform, close_waypoint: Transform, far_waypoint: Transform,
+                      **kwargs) -> VehicleControl:
 
         # run lat pid controller
-        steering, error, wide_error, sharp_error = self.lat_pid_controller.run_in_series(next_waypoint=next_waypoint, close_waypoint=close_waypoint, far_waypoint=far_waypoint)
-
+        steering, error, wide_error, sharp_error = self.lat_pid_controller.run_in_series(next_waypoint=next_waypoint,
+                                                                                         close_waypoint=close_waypoint,
+                                                                                         far_waypoint=far_waypoint)
 
         current_speed = Vehicle.get_speed(self.agent.vehicle)
 
@@ -48,15 +51,16 @@ class PIDFastController(Controller):
         error = abs(round(error, 3))
         wide_error = abs(round(wide_error, 3))
         sharp_error = abs(round(sharp_error, 3))
-        #print(error, wide_error, sharp_error)
+        # print(error, wide_error, sharp_error)
 
         # calculate change in pitch
         pitch = float(next_waypoint.record().split(",")[4])
-        #print(next_waypoint.record())
+        # print(next_waypoint.record())
 
         if pitch == 1.234567890:
             # bypass pitch
             self.pitch_bypass = True
+            self.force_brake = False
         elif pitch == 0.987654321:
             # force break
             self.force_brake = True
@@ -70,27 +74,27 @@ class PIDFastController(Controller):
         if self.force_brake:
             throttle = -1
             brake = 1
-            #print("force break")
-        elif self.delta_pitch < -2.3 and current_speed > 75 and not self.pitch_bypass: # big bump
+            # print("force break")
+        elif self.delta_pitch < -2.3 and current_speed > 75 and not self.pitch_bypass:  # big bump
             throttle = -1
             brake = 1
-            #print("BIG slope")
-            #print(next_waypoint.record())
-        elif sharp_error > 0.6 and current_speed > 85: # narrow turn
+            # print("BIG slope")
+            # print(next_waypoint.record())
+        elif sharp_error > 0.6 and current_speed > 85:  # narrow turn
             throttle = -1
             brake = 1
-            #print("narrow turn")
-        elif self.delta_pitch < -0.35 and current_speed > 90 and not self.pitch_bypass: # small bump
+            # print("narrow turn")
+        elif self.delta_pitch < -0.35 and current_speed > 90 and not self.pitch_bypass:  # small bump
             throttle = 0
             brake = 0
-            #print("slope:", round(self.delta_pitch, 3))
-            #print(next_waypoint.record())
-        elif abs(steering) > 0.3 and current_speed > 50: # steering control
+            # print("slope:", round(self.delta_pitch, 3))
+            # print(next_waypoint.record())
+        elif abs(steering) > 0.3 and current_speed > 50:  # steering control
             throttle = 0.3
             brake = 0
-            #print("hard steering")
-        elif wide_error > 0.05 and current_speed > 95: # wide turn
-            throttle = max(0.2, 1 - 6.6*pow(wide_error + current_speed*0.0015, 3))
+            # print("hard steering")
+        elif wide_error > 0.05 and current_speed > 95:  # wide turn
+            throttle = max(0.2, 1 - 6.6 * pow(wide_error + current_speed * 0.0015, 3))
             brake = 0
         elif current_speed > self.max_speed:
             throttle = 0.9
@@ -100,8 +104,8 @@ class PIDFastController(Controller):
             brake = 0
 
         # DEBUGGING
-        #print(round(self.delta_pitch, 2))
-        #print(round(wide_error, 2))
+        # print(round(self.delta_pitch, 2))
+        # print(round(wide_error, 2))
 
         return VehicleControl(throttle=throttle, steering=steering, brake=brake)
 
@@ -116,6 +120,7 @@ class PIDFastController(Controller):
                 break
         return np.array([k_p, k_d, k_i])
 
+
 class LatPIDController(Controller):
     def __init__(self, agent, config: dict, steering_boundary: Tuple[float, float],
                  dt: float = 0.03, **kwargs):
@@ -125,7 +130,8 @@ class LatPIDController(Controller):
         self._error_buffer = deque(maxlen=10)
         self._dt = dt
 
-    def run_in_series(self, next_waypoint: Transform, close_waypoint: Transform, far_waypoint: Transform, **kwargs) -> float:
+    def run_in_series(self, next_waypoint: Transform, close_waypoint: Transform, far_waypoint: Transform,
+                      **kwargs) -> float:
         """
         Calculates a vector that represent where you are going.
         Args:
@@ -154,8 +160,9 @@ class LatPIDController(Controller):
 
         v_vec_normed = v_vec / np.linalg.norm(v_vec)
         w_vec_normed = w_vec / np.linalg.norm(w_vec)
-        #error = np.arccos(v_vec_normed @ w_vec_normed.T)
-        error = np.arccos(min(max(v_vec_normed @ w_vec_normed.T, -1), 1)) # makes sure arccos input is between -1 and 1, inclusive
+        # error = np.arccos(v_vec_normed @ w_vec_normed.T)
+        error = np.arccos(
+            min(max(v_vec_normed @ w_vec_normed.T, -1), 1))  # makes sure arccos input is between -1 and 1, inclusive
         _cross = np.cross(v_vec_normed, w_vec_normed)
 
         # calculate close error projection
@@ -167,8 +174,9 @@ class LatPIDController(Controller):
             ]
         )
         w_vec_normed = w_vec / np.linalg.norm(w_vec)
-        #wide_error = np.arccos(v_vec_normed @ w_vec_normed.T)
-        wide_error = np.arccos(min(max(v_vec_normed @ w_vec_normed.T, -1), 1)) # makes sure arccos input is between -1 and 1, inclusive
+        # wide_error = np.arccos(v_vec_normed @ w_vec_normed.T)
+        wide_error = np.arccos(
+            min(max(v_vec_normed @ w_vec_normed.T, -1), 1))  # makes sure arccos input is between -1 and 1, inclusive
 
         # calculate far error projection
         w_vec = np.array(
@@ -179,8 +187,9 @@ class LatPIDController(Controller):
             ]
         )
         w_vec_normed = w_vec / np.linalg.norm(w_vec)
-        #sharp_error = np.arccos(v_vec_normed @ w_vec_normed.T)
-        sharp_error = np.arccos(min(max(v_vec_normed @ w_vec_normed.T, -1), 1)) # makes sure arccos input is between -1 and 1, inclusive
+        # sharp_error = np.arccos(v_vec_normed @ w_vec_normed.T)
+        sharp_error = np.arccos(
+            min(max(v_vec_normed @ w_vec_normed.T, -1), 1))  # makes sure arccos input is between -1 and 1, inclusive
 
         if _cross[1] > 0:
             error *= -1
