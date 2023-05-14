@@ -4,7 +4,7 @@ from ROAR.utilities_module.vehicle_models import Vehicle, VehicleControl
 from ROAR.control_module.controller import Controller
 from ROAR.planning_module.mission_planner.mission_planner import MissionPlanner
 from ROAR.planning_module.behavior_planner.behavior_planner import BehaviorPlanner
-import keyboard
+
 
 import logging
 from typing import Union

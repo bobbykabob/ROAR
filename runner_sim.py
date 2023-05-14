@@ -9,9 +9,9 @@ from ROAR.configurations.configuration import Configuration as AgentConfig
 import argparse
 from misc.utils import str2bool
 from ROAR.agent_module.harris_agent import HarrisAgent
-from  ROAR.agent_module.special_agents.waypoint_generating_agent import  WaypointGeneratingAgent
+from ROAR.agent_module.special_agents.waypoint_generating_agent import  WaypointGeneratingAgent
 from ROAR.agent_module.pid_fast_agent import PIDFastAgent
-def main(args):
+def main(zargs):
     """Starts game loop"""
     agent_config = AgentConfig.parse_file(Path("./ROAR/configurations/carla/carla_agent_configuration.json"))
     carla_config = CarlaConfig.parse_file(Path("./ROAR_Sim/configurations/configuration.json"))
